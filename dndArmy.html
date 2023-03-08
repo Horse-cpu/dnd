@@ -1,0 +1,173 @@
+﻿<html>
+    <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+        <title>Armies</title>
+        <style>
+            .display {
+                font-size: 80px;
+                font-family: Mrs Eaves;
+                font-weight: bolder;
+                font-variant: small-caps;
+                text-transform: capitalize;
+            }
+            .sides {
+                display: inline;
+                margin: 0px 3px 0px 0px;
+            }
+        </style>
+    </head>
+    <body>
+        <select id="1st"></select>
+        <select id="2nd"></select>
+        <button onclick="fight()">Fight</button> <br />
+        <p id="info"></p>
+        <br /><br />
+
+        <ul id="list"></ul><br />
+        <input id="size" class="sides" type="number" placeholder="How many units" />
+        <div class="sides">
+            <input id="species" class="sides" list="speciesList" onchange="updateAttack()" placeholder="Select species"/>
+            <datalist id="speciesList"></datalist>
+        </div>
+
+        <select id="attack" class="sides"></select>
+        <input id="name" type="text" placeholder="Name?" class="sides"/>
+        <button onclick="generateArmy()" class="sides">Create</button><br /><br />
+
+        <select id="rm"></select>
+        <button onclick="rmArmy()">Remove</button>
+
+        <script src="res.js"></script>
+        <script src="dice.js"></script>
+        <script>
+            var search = document.getElementById("search");
+            var size = document.getElementById("size");
+            var spec = document.getElementById("species");
+            var specList = document.getElementById("speciesList");
+            var att = document.getElementById("attack");
+            var aName = document.getElementById("name");
+            var list = document.getElementById("list");
+            var rm = document.getElementById("rm");
+            var fst = document.getElementById("1st");
+            var snd = document.getElementById("2nd");
+            var info = document.getElementById("info");
+            for (var i = 0; i < data.enemies.length; i++) {
+                for (var j = 0; j < data.enemies[i].e.length; j++) {
+                    var a = document.createElement('option'); a.value = data.enemies[i].e[j].name;
+                    specList.appendChild(a);
+                }
+            }
+            a = document.createElement('option'); a.value = -1; a.textContent = "Select attack";
+            att.appendChild(a);
+            const src = "arm";
+            var armies = [];
+            updateList();
+
+            var specVal = [-1,-1];
+
+            function fight() {
+                if (fst.value == -1 || snd.value == -1) return;
+
+                // calculate ac rolls (estimate with normal)
+                var pass = (20 - data.enemies[armies[snd.value].cat].e[armies[snd.value].species].properties.ac[0] + data.enemies[armies[fst.value].cat].e[armies[fst.value].species].actions[armies[fst.value].attack].attack.bonus) / 20;
+                // note: add crits
+                var mu = armies[fst.value].size * pass;
+                var sig = Math.sqrt(mu * Math.max(0, (1 - pass)));
+                var successes = eval(parse("(1n(" + sig + ")) + " + Math.floor(mu)));
+                var damage = eval(parse("(" + successes + ")#(" + data.enemies[armies[fst.value].cat].e[armies[fst.value].species].actions[armies[fst.value].attack].hit.damage[1] + ")"));
+                info.innerText = successes + " from " + armies[fst.value].name + " use " + data.enemies[armies[fst.value].cat].e[armies[fst.value].species].actions[armies[fst.value].attack].name + ", dealing " + damage + " damage to " + armies[snd.value].name + ".";
+                armies[snd.value].hp -= Math.min(armies[snd.value].hp, damage);
+                // estimate healths distributed by HP - (1eP) + 1n1
+                var p = 2;
+                var cm = 0;
+                var og = armies[snd.value].size;
+                armies[snd.value].size = 0;
+                var distr = parse(data.enemies[armies[snd.value].cat].e[armies[snd.value].species].properties.hp[1] + " - (1e(" + p + ")) + (1n1)")
+                while (cm < armies[snd.value].hp) {
+                    cm += Math.max(1, eval(distr));
+                    armies[snd.value].size++;
+                    if (armies[snd.value].size == og) break;
+                }
+                // print stuff
+                info.innerText += "\n" + (og - armies[snd.value].size) + " have died.";
+                if (armies[snd.value].hp == 0) {
+                    info.innerText += "\n" + armies[snd.value].name + " are now all dead.";
+                    armies.splice(snd.value, 1);
+                }
+                localStorage.setItem(src, JSON.stringify(armies));
+                updateList();
+            }
+
+            function updateAttack() {
+                specVal = [-1,-1];
+                for (var i = 0; i < data.enemies.length; i++) {
+                    for (var j = 0; j < data.enemies[i].e.length; j++) {
+                        if (data.enemies[i].e[j].name == spec.value) specVal = [i, j];
+                    }
+                }
+
+                att.innerHTML = ''; att.id = "attack"; att.name = "attack";
+                a = document.createElement('option'); a.value = -1; a.textContent = "Select attack";
+                att.appendChild(a);
+                if (specVal == -1) return;
+                for (var i = 0; i < data.enemies[specVal[0]].e[specVal[1]].actions.length; i++) {
+                    a = document.createElement('option'); a.value = i; a.textContent = data.enemies[specVal[0]].e[specVal[1]].actions[i].name;
+                    att.appendChild(a);
+                }
+            }
+            function updateList() {
+                // update the list
+                list.innerHTML = ""; list.id = "list";
+                var s = JSON.parse(localStorage.getItem(src));
+                if (s != null) armies = s;
+                for (var i = 0; i < armies.length; i++) {
+                    var g = document.createElement('li'); g.id = i; g.textContent = "(" + armies[i].name + ") Size: " + armies[i].size + ", Type: " + data.enemies[armies[i].cat].e[armies[i].species].name + ", Attack: " + data.enemies[armies[i].species].actions[armies[i].attack].name + ", HP: " + armies[i].hp + ", AC: " + data.enemies[armies[i].species].properties.ac;
+                    list.appendChild(g);
+                }
+
+                // update the remove selection and the fight selections
+                fst.innerHTML = ""; fst.id = "1st";
+                snd.innerHTML = ""; fst.id = "2nd";
+                rm.innerHTML = ""; fst.id = "rm";
+                a = document.createElement('option'); a.value = -1; a.textContent = "Select Attacker";
+                fst.appendChild(a);
+                a = document.createElement('option'); a.value = -1; a.textContent = "Select Victim";
+                snd.appendChild(a);
+                a = document.createElement('option'); a.value = -1; a.textContent = "Select Army to Remove";
+                rm.appendChild(a);
+                for (var i = 0; i < armies.length; i++) {
+                    a = document.createElement('option'); a.value = i; a.textContent = armies[i].name;
+                    fst.appendChild(a);
+                    a = document.createElement('option'); a.value = i; a.textContent = armies[i].name;
+                    snd.appendChild(a);
+                    a = document.createElement('option'); a.value = i; a.textContent = armies[i].name;
+                    rm.appendChild(a);
+                }
+            }
+            function rmArmy() {
+                if (rm.value == "") return
+                armies.splice(rm.value, 1);
+                rm.value = "";
+                localStorage.setItem(src, JSON.stringify(armies));
+                updateList();
+            }
+            function generateArmy() {
+                if (size.value == 0 || size.value == "" || specVal == [-1,-1] || aName.value == "") return;
+                armies.push({
+                    name: aName.value,
+                    cat: specVal[0],
+                    species: specVal[1],
+                    size: size.value,
+                    attack: att.value,
+                    hp: eval(parse(size.value + "#" + data.enemies[specVal[0]].e[specVal[1]].properties.hp[1]))
+                });
+                size.value = "";
+                spec.value = "";
+                updateAttack();
+                aName.value = "";
+                localStorage.setItem(src, JSON.stringify(armies));
+                updateList();
+            }
+        </script>
+    </body>
+</html>

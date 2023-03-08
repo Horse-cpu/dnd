@@ -1,0 +1,122 @@
+<html>
+	<head>
+        <title>Dice</title>
+        <style>
+            .display {
+                font-size: 80px;
+                font-family: Mrs Eaves;
+                font-weight: bolder;
+                font-variant: small-caps;
+                text-transform: capitalize;
+            }
+        </style>
+	</head>
+    <body>
+        <textarea type="text" id="_2" rows="4" cols="50">1d20</textarea><br />
+        <button onclick="roll()">Roll</button>
+        <h1 class="display" id="outRoll">0</h1>
+        <h2 id="mean">&mu; &ap; 0</h2>
+        <h2 id="median">Median &ap; 0</h2>
+        <h2 id="sigma">&sigma; &ap; 0</h2>
+        <p id="graphTop">Top: , Range: []</p>
+        <canvas id="grapher" width="500" height="250"></canvas><br /><br />
+        <input type="number" placeholder="Enter number" id="quants" /><button onclick="quantThis()">Find quantiles</button><br />
+        <h2 id="quantOut"></h2>
+        <br />
+        <p>
+            This is a dice-notation javascript compiler.<br />
+            This allows for any javascript functions (apart from binary xor), including any Math functions.<br />
+            To do this, type (1d20) in to roll a d20 dice, and make sure to enclose your dice in brackets!<br />
+            To access more complicated distributions, use the following:<br />
+            &emsp;- 'd' for a uniform dice, the second number is the upper bound.<br />
+            &emsp;- 'e' for geometric distribution, the second number is the reciprocal of the probability of success.<br />
+            &emsp;- 'n' for (rounded) normal distribution, the second number is standard deviation.<br />
+            &emsp;- 'c' for (rounded) cauchy distribution, the second number is shape parameter.<br />
+            &emsp;- 'l' for (rounded) levy distribution, the second number is shape parameter.<br />
+            &emsp;- 'x' for (rounded) chi^2 distribution, the second number is degrees of freedom.<br />
+            To sample a dice A N times and add them together, type "N#A".<br />
+            To sample a dice A N times and multiply them, type "N^A".<br />
+            To change sample size (default 100,000), begin with "sampleSize = N;" where N is the desired number.<br />
+            To change the maximum graph x-values (default 50), begin with "graphMax = N;" where N is the maximum positive value.<br />
+            To print a second line, type "\n" and concatenate as a string. Note this will break the stats calculations.<br />
+        </p>
+        <br />
+
+        <script src="dice.js"></script>
+        <script>
+            var _2 = document.getElementById("_2");
+            var outRoll = document.getElementById("outRoll");
+            var mean = document.getElementById("mean");
+            var median = document.getElementById("median");
+            var sigma = document.getElementById("sigma");
+            var quants = document.getElementById("quants");
+            var quantOut = document.getElementById("quantOut");
+            var cnv = document.getElementById("grapher");
+            var graphTop = document.getElementById("graphTop");
+
+            var sampleSize = 1E5; // for stats bits
+            var graphMax = 50; // to cap for what to add to graph
+            var rolled = "";
+            var samples = [];
+            function roll() {
+                var ctx = cnv.getContext('2d');
+                samples = [];
+                rolled = parse(_2.value);
+                outRoll.innerHTML = eval(rolled).toString().replaceAll("\n", "<br/>");
+                var sampleMean = 0; var sample2ndMoment = 0;
+                for (var i = 0; i < sampleSize; i++) {
+                    var t = eval(rolled);
+                    if ((t >= 0 && t < graphMax) || (t <= 0 && t > -graphMax)) samples.push(t);
+                    sampleMean += t;
+                    sample2ndMoment += t * t;
+                }
+                sampleMean /= sampleSize;
+                samples.sort((a, b) => { return a - b; });
+
+                mean.textContent = "\u03BC \u2248 " + Math.floor(100 * sampleMean) / 100;
+                median.textContent = "Median \u2248 " + Math.floor(100 * samples[Math.floor(sampleSize / 2)]) / 100;
+                sigma.textContent = "\u03C3 \u2248 " + Math.floor(100 * Math.sqrt((sample2ndMoment - sampleMean * sampleMean * sampleSize) / (sampleSize - 1))) / 100;
+
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, cnv.width, cnv.height);
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(1, 1, cnv.width - 2, cnv.height - 2);
+                ctx.strokeStyle = '#000';
+                var least = Math.min(...samples); var most = Math.max(...samples);
+                var w = cnv.width / (most - least + 1); // how wide is 1, need 0.5 padding either side
+                var seen = []; var freqs = [];
+                for (var i = 0; i < sampleSize; i++) {
+                    if (seen.includes(samples[i])) freqs[freqs.length - 1]++;
+                    else {
+                        seen.push(samples[i]);
+                        freqs.push(1);
+                    }
+                }
+                var mostf = Math.ceil(100 * Math.max(...freqs) / sampleSize) / 100 * sampleSize;
+
+                graphTop.textContent = "Top:" + (Math.round(100 * mostf /sampleSize) / 100) + ", Range: [" + (Math.round(100 * least) / 100) + ", " + (Math.round(100 * most) / 100) + "]";
+
+                var h = cnv.height / (mostf + 1);
+                ctx.lineWidth = 3;
+                for (var i = 0; i < seen.length; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo((seen[i] - least) * w, (mostf - freqs[i] + 1) * h);
+                    ctx.lineTo((seen[i] - least + 1) * w, (mostf - freqs[i] + 1) * h);
+                    ctx.stroke();
+                }
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo((0.5 - least) * w, 0);
+                ctx.lineTo((0.5 - least) * w, cnv.height);
+                ctx.stroke();
+            }
+            function quantThis() {
+                var n = parseInt(quants.value);
+                quantOut.innerHTML = "1d" + n + "<br/>";
+                for (var i = 0; i < n; i++) {
+                    quantOut.innerHTML += samples[Math.round(i * (sampleSize - 1) / (n - 1))] + "<br/>";
+                }
+            }
+        </script>
+    </body>
+</html>

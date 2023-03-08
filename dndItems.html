@@ -1,0 +1,325 @@
+<html>
+	<head>
+		<title>Items</title>
+		<style>
+            input {
+                font-family: Mrs Eaves;
+                width: 100%;
+                font-size: 2rem;
+            }
+            .header {
+                font-family: Mrs Eaves;
+                color: #000000;
+                width: 100%;
+                display: block;
+                font-size: 3rem;
+                font-weight: bolder;
+                font-variant: small-caps;
+                text-transform: capitalize;
+                margin: 0px 0px -5px 0px;
+            }
+            button {
+                color: #000;
+                font-family: Mrs Eaves;
+                font-style: italic;
+                text-align: center;
+                display: inline-block;
+                font-size: 1.3rem;
+            }
+            .content {
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.2s ease-out;
+            }
+            .content2 {
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.8s cubic-bezier(0.75,0,0.25,1);
+            }
+            .tab {
+                margin-left: 40px;
+            }
+            .subheader {
+                font-family: Mrs Eaves;
+                color: #000;
+                font-size: 2.5rem;
+                font-weight: normal;
+                font-variant: small-caps;
+                text-transform: capitalize;
+                margin: -10px 0px -5px 0px;
+            }
+            .sides {
+                display: inline;
+                margin: 0px 7px 0px 5px;
+            }
+            .booktemplate {
+                color: black;
+                background-position: 50% 50%;
+                -webkit-background-origin: padding-box;
+                background-origin: padding-box;
+                -webkit-background-clip: border-box;
+                background-clip: border-box;
+                background-size: auto auto;
+            }
+            .booktemplate .gold {
+                height: 6px;
+                width: 101%;
+                background-image: url("https://s3.amazonaws.com/files.d20.io/images/105716694/59KW_4mBR3y_Iz45sQw2-g/med.png");
+                border: 1px solid #2f2112;
+                border-radius: 2px;
+                margin: 5px 0px 5px -3px;
+            }
+            .booktemplate .body {
+                margin: 10px 5px 5px 8px;
+            }
+            .booktemplate .description {
+                display: inline;
+                margin: 0px 7px 0px 5px;
+                font-style: italic;
+                color: #58170D;
+            }
+            .booktemplate .name h1 {
+                font-family: Mrs Eaves;
+                color: #58170D;
+                font-size: 2.5rem;
+                font-weight: bolder;
+                font-variant: small-caps;
+                text-transform: capitalize;
+                margin: -10px 0px -5px 0px;
+            }
+            .booktemplate .subtitle {
+                font-style: italic;
+            }
+            .booktemplate .subtitle span {
+                font-weight: normal;
+            }
+            .booktemplate .subtitle .level0:after {
+                content: "";
+            }
+            .booktemplate .subtitle .level1:after {
+                content: "st level";
+            }
+            .booktemplate .subtitle .level2:after {
+                content: "nd level";
+            }
+            .booktemplate .subtitle .level3:after {
+                content: "rd level";
+            }
+            .booktemplate .redsubtitle {
+                color: #58170D;
+            }
+            .booktemplate .single-list {
+                color: #58170D;
+                font-family: Georgia, serif;
+            }
+            .booktemplate .action-list {
+                color: #000000;
+                font-family: Georgia, serif;
+            }
+            .booktemplate .horizontal-list {
+                font-family: Mrs Eaves;
+                color: #58170D;
+            }
+            .booktemplate ul {
+                list-style-type: none;
+                margin-left: -38px;
+                margin-bottom: 10px;
+            }
+            .booktemplate li {
+                line-height: 1.4rem;
+                font-size: 1.1rem;
+                margin: 5px 0px -5px 0px !important;
+            }
+            .booktemplate span {
+                color: #58170D;
+                font-weight: bold;
+            }
+            .booktemplate .action-list span {
+                color: #000;
+                font-weight: bold;
+                font-style: italic;
+            }
+            .booktemplate .horizontal-list .headers {
+                font-weight: bold;
+            }
+            .booktemplate .horizontal-list table {
+                width: 90%;
+            }
+            .booktemplate .horizontal-list td {
+                text-align: center;
+                color: #58170D;
+                font-size: 1.6rem;
+            }
+            .booktemplate .single-view {
+                background-image: url(https://s3.amazonaws.com/files.d20.io/images/105716505/oymO0pnVyLCv-tQDw2vddA/med.png);
+                margin: 5px 10px 5px 10px;
+                font-size: 1.3rem;
+            }
+            .booktemplate hr {
+                display: block;
+                height: 1px;
+                border: 0;
+                border-top: 1px solid #58170D;
+                margin: 1em 0;
+                padding: 0;
+            }
+            .booktemplate .single-view h2 {
+                font-family: sans-serif;
+                font-variant: small-caps;
+                font-size: 1.5rem;
+                text-transform: capitalize;
+                color: #58170D;
+                margin: 5px 0px -12px 0px;
+            }
+		</style>
+	</head>
+    <body>
+        <input type="text" id="search" placeholder="Search..." onchange="refresh()" /><br />
+        <div id="container"></div>
+        <script src="res.js"></script>
+        <script src="dice.js"></script>
+        <script>
+            var search = document.getElementById("search");
+            var cont = document.getElementById("container");
+            refresh();
+
+            function refresh() {
+                cont.innerHTML = ""; cont.id = "container";
+                regex = new RegExp(search.value, "i");
+                w = document.createElement('br'); cont.appendChild(w);
+                w = document.createElement('hr'); cont.appendChild(w);
+                w = document.createElement('br'); cont.appendChild(w);
+
+                // generate items
+                var y = document.createElement('div');
+                for (var x = 0; x < data.items.length; x++) {
+                    var shouldPrint = false;
+                    for (var i = 0; i < data.items[x].e.length; i++) {
+                        if (regex.test(data.items[x].e[i].name) || regex.test(data.items[x].e[i].subtitle)) shouldPrint = true;
+                    }
+                    if (!shouldPrint) continue;
+                    w = document.createElement('span'); w.innerText = " - " + data.items[x].name; w.className = "subheader"; y.appendChild(w);
+                    for (var i = 0; i < data.items[x].e.length; i++) {
+                        if (!regex.test(data.items[x].e[i].name) && !regex.test(data.items[x].e[i].subtitle)) continue;
+                        var a = document.createElement('div'); a.className = "booktemplate";
+                        var b = document.createElement('div'); b.className = "single-view"; a.appendChild(b);
+                        var c = document.createElement('div'); c.className = "gold"; b.appendChild(c);
+
+                        c = document.createElement('div'); c.className = "body";
+                        var d = document.createElement('div'); d.className = "name";
+                        var e = document.createElement('h1'); e.innerText = data.items[x].e[i].name; d.appendChild(e); c.appendChild(d);
+
+                        // subtitle
+                        d = document.createElement('div'); d.className = "content";
+                        e = document.createElement('div'); e.className = "subtitle redsubtitle";
+                        var f = document.createElement('span'); f.innerText = data.items[x].e[i].subtitle; e.appendChild(f); d.appendChild(e);
+
+                        // properties
+                        e = document.createElement('div'); e.className = "single-list";
+                        f = document.createElement('ul');
+                        var g = document.createElement('li'); f.appendChild(g);
+                        var h = null;
+                        if (data.items[x].e[i].properties.dice != null) {
+                            for (var j = 0; j < data.items[x].e[i].properties.dice.length; j++) {
+                                g = document.createElement('li');
+                                h = document.createElement('span'); h.className = "sides"; h.innerText = data.items[x].e[i].properties.dice[j][0]; g.appendChild(h);
+                                h = document.createElement('button'); h.className = "sides"; h.ondrag = data.items[x].e[i].properties.dice[j][1]; h.onclick = function () { this.innerText = this.ondrag(); this.parentElement.parentElement.parentElement.parentElement.style.maxHeight = this.parentElement.parentElement.parentElement.parentElement.scrollHeight + "px"; }; h.innerText = "Roll Dice"; g.appendChild(h); f.appendChild(g);
+                            }
+                        }
+                        if (data.items[x].e[i].properties.damage != null && data.items[x].e[i].properties.damage[0] != "") {
+                            g = document.createElement('li');
+                            h = document.createElement('span'); h.className = "sides"; h.innerText = "Damage"; g.appendChild(h);
+                            h = document.createElement('p'); h.className = "sides"; h.innerText = data.items[x].e[i].properties.damage[0]; g.appendChild(h);
+                            h = document.createElement('button'); h.className = "sides"; h.id = data.items[x].e[i].properties.damage[1]; h.onclick = function () { copy(this.id); }; h.innerText = "Copy"; g.appendChild(h); f.appendChild(g);
+                        }
+                        if (data.items[x].e[i].properties.cast_time != null) {
+                            g = document.createElement('li');
+                            h = document.createElement('span'); h.className = "sides"; h.innerText = "Casting Time"; g.appendChild(h);
+                            h = document.createElement('p'); h.className = "sides"; h.innerText = data.items[x].e[i].properties.cast_time; g.appendChild(h); f.appendChild(g);
+                        }
+                        if (data.items[x].e[i].properties.type != null) {
+                            g = document.createElement('li');
+                            var h = document.createElement('span'); h.className = "sides"; h.innerText = "Damage Type"; g.appendChild(h);
+                            h = document.createElement('p'); h.className = "sides"; h.innerText = data.items[x].e[i].properties.type; g.appendChild(h); f.appendChild(g);
+                        }
+                        if (data.items[x].e[i].properties.rarity != null) {
+                            g = document.createElement('li');
+                            var h = document.createElement('span'); h.className = "sides"; h.innerText = "Item Rarity"; g.appendChild(h);
+                            h = document.createElement('p'); h.className = "sides"; h.innerText = data.items[x].e[i].properties.rarity; g.appendChild(h); f.appendChild(g);
+                        }
+                        if (data.items[x].e[i].properties.ability != null) {
+                            g = document.createElement('li');
+                            var h = document.createElement('span'); h.className = "sides"; h.innerText = "Attack Ability"; g.appendChild(h);
+                            h = document.createElement('p'); h.className = "sides"; h.innerText = data.items[x].e[i].properties.ability; g.appendChild(h); f.appendChild(g);
+                        }
+                        if (data.items[x].e[i].properties.properties != null) {
+                            g = document.createElement('li');
+                            h = document.createElement('span'); h.className = "sides"; h.innerText = "Properties"; g.appendChild(h);
+                            h = document.createElement('p'); h.className = "sides"; h.innerText = data.items[x].e[i].properties.properties; g.appendChild(h); f.appendChild(g);
+                        }
+                        if (data.items[x].e[i].properties.range != null) {
+                            g = document.createElement('li');
+                            h = document.createElement('span'); h.className = "sides"; h.innerText = "Range"; g.appendChild(h);
+                            h = document.createElement('p'); h.className = "sides"; h.innerText = data.items[x].e[i].properties.range; g.appendChild(h); f.appendChild(g);
+                        }
+                        if (data.items[x].e[i].properties.target != null) {
+                            g = document.createElement('li');
+                            h = document.createElement('span'); h.className = "sides"; h.innerText = "Target"; g.appendChild(h);
+                            h = document.createElement('p'); h.className = "sides"; h.innerText = data.items[x].e[i].properties.target; g.appendChild(h); f.appendChild(g);
+                        }
+                        if (data.items[x].e[i].properties.components != null) {
+                            g = document.createElement('li');
+                            h = document.createElement('span'); h.className = "sides"; h.innerText = "Components"; g.appendChild(h);
+                            h = document.createElement('p'); h.className = "sides"; h.innerText = data.items[x].e[i].properties.components; g.appendChild(h); f.appendChild(g);
+                        }
+                        if (data.items[x].e[i].properties.duration != null) {
+                            g = document.createElement('li');
+                            h = document.createElement('span'); h.className = "sides"; h.innerText = "Duration"; g.appendChild(h);
+                            h = document.createElement('p'); h.className = "sides"; h.innerText = data.items[x].e[i].properties.duration; g.appendChild(h); f.appendChild(g);
+                        }
+                        if (data.items[x].e[i].properties.classes != null) {
+                            g = document.createElement('li');
+                            h = document.createElement('span'); h.className = "sides"; h.innerText = "Classes"; g.appendChild(h);
+                            h = document.createElement('p'); h.className = "sides"; h.innerText = data.items[x].e[i].properties.classes; g.appendChild(h); f.appendChild(g);
+                        }
+                        e.appendChild(f); d.appendChild(e);
+                        // description
+                        if (data.items[x].e[i].description != null) {
+                            e = document.createElement('hr'); d.appendChild(e);
+                            e = document.createElement('div'); e.className = "description"; e.innerText = data.items[x].e[i].description; d.appendChild(e);
+                        }
+                        if (data.items[x].e[i].higher_levels != null) {
+                            e = document.createElement('hr'); d.appendChild(e);
+                            e = document.createElement('span'); e.className = "sides"; e.innerText = "At Higher Levels"; d.appendChild(e);
+                            e = document.createElement('div'); e.className = "description"; e.innerText = data.items[x].e[i].higher_levels; d.appendChild(e);
+                        }
+                        e = document.createElement('br'); d.appendChild(e);
+                        e = document.createElement('br'); d.appendChild(e);
+                        c.appendChild(d); b.appendChild(c);
+
+                        c = document.createElement('div'); c.className = "gold"; b.appendChild(c);
+                        y.appendChild(a);
+                    }
+                    w = document.createElement('br'); y.appendChild(w);
+                    w = document.createElement('hr'); y.appendChild(w);
+                    w = document.createElement('br'); y.appendChild(w);
+                }
+                cont.appendChild(y);
+
+                // add opening function
+                var coll = document.getElementsByClassName("name");
+                for (i = 0; i < coll.length; i++) {
+                    coll[i].addEventListener("click", function () {
+                        var content = this.nextElementSibling;
+                        if (content.style.maxHeight) {
+                            content.style.maxHeight = null;
+                        } else {
+                            content.style.maxHeight = content.scrollHeight + "px";
+                        }
+                    });
+                }
+            }
+            function copy(x) { navigator.clipboard.writeText(x); console.log(x); }
+        </script>
+    </body>
+</html>
